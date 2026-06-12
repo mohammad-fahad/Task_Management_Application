@@ -1,0 +1,6 @@
+vendor/
+.git/
+*.md
+*.test.go
+Dockerfile
+docker-compose*

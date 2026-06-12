@@ -342,9 +342,35 @@ NEXT_SERVER_API_URL=https://api.yourdomain.com/api
 
 > **Note:** For local Docker Compose development, `NEXT_SERVER_API_URL=http://api:8080/api` resolves via the internal Docker network. On Vercel, both variables point to the same public API URL because there is no internal Docker network.
 
+### Cross-Domain Cookie Configuration (Frontend on Vercel, Backend on Render)
+
+When the frontend is hosted on **Vercel** and the backend on **Render** (or any separate domain), the browser's Same-Origin Policy and cookie scoping rules require explicit opt-in for cross-domain cookie delivery:
+
+| Attribute | Required Value | Rationale |
+|---|---|---|
+| `SameSite` | `None` | Allows the cookie to be sent with cross-origin requests. `SameSite=Lax` (the browser default in 2025) would block the cookie on the actual cross-origin `fetch()` call. |
+| `Secure` | `true` | Required by the Fetch Standard when `SameSite=None` is set. The backend endpoint must be served over HTTPS with a valid TLS certificate. |
+| `Domain` | _Not set_ | Leaving the domain attribute unspecified restricts the cookie to the issuing origin (the backend). The browser will still attach it to cross-origin `fetch()` requests because `SameSite=None` is in effect. |
+| `HttpOnly` | `true` | Prevents JavaScript from reading the cookie, eliminating XSS-based token theft. |
+
+**Backend cookie-setting code example (Go):**
+```go
+http.SetCookie(w, &http.Cookie{
+    Name:     "auth_token",
+    Value:    tokenString,
+    Path:     "/",
+    HttpOnly: true,
+    Secure:   true,           // Required when frontend and backend are on different origins
+    SameSite: http.SameSiteNoneMode, // Allows cross-origin delivery
+    MaxAge:   86400,          // 24 hours
+})
+```
+
+> ⚠️ **Important**: `http.SameSiteNoneMode` requires Go 1.16+. The backend binary uses Go 1.22, so this value is fully supported. Ensure `Secure: true` is only enabled in production — local development over HTTP should use `SameSite=http.SameSiteStrictMode` with `Secure: false`.
+
 ### Custom Domain Considerations
 
-1. **CORS Origin**: Set `API_ALLOWED_ORIGINS` in the backend deployment (e.g., Railway, Fly.io, or your own VPS) to match the **exact** Vercel frontend domain (e.g., `https://task-manager.vercel.app` or your custom domain).
+1. **CORS Origin**: Set `API_ALLOWED_ORIGINS` in the backend deployment (e.g., Render, Railway, Fly.io, or your own VPS) to match the **exact** Vercel frontend domain (e.g., `https://task-manager.vercel.app` or your custom domain). The Go CORS middleware (`backend/internal/middleware/cors.go`) automatically merges this with the built-in defaults (`http://localhost:3000` and `https://task-management-application-omega-lyart.vercel.app`).
 2. **Cookie Domain**: For cross-domain cookies (frontend on Vercel, backend on another host), ensure the backend sets `SameSite=None; Secure` on the JWT cookie and the backend domain is served over HTTPS with a valid TLS certificate.
 
 ---
@@ -370,10 +396,21 @@ NEXT_SERVER_API_URL=https://api.yourdomain.com/api
 > The server explicitly handles `OPTIONS` preflight requests at the middleware layer and returns
 > **HTTP 200 OK** immediately — without entering the route execution pipeline. This behaviour
 > eliminates unnecessary latency for cross-origin requests (the preflight round-trip completes
-> in a single network hop) and ensures full compatibility with credentialled requests (cookies)
+> in a single network hop) and ensures full compatibility with credentialed requests (cookies)
 > by returning the exact `Access-Control-Allow-Origin` and `Access-Control-Allow-Credentials: true`
 > headers. The preflight cache is set to `3600` seconds (`Access-Control-Max-Age: 3600`), so
 > browsers only send one `OPTIONS` request per origin per hour.
+>
+> **Implementation details (`backend/internal/middleware/cors.go`):**
+> - The middleware reads `API_ALLOWED_ORIGINS` from the environment and merges it with two
+>   **built-in default origins**: `http://localhost:3000` (local development) and
+>   `https://task-management-application-omega-lyart.vercel.app` (production Vercel domain).
+> - Wildcard origins (`*`) are filtered out at startup — never returned to clients — because
+>   the `Access-Control-Allow-Credentials: true` header required for cookie-based auth is
+>   **incompatible with wildcard origins** per the Fetch Standard.
+> - Preflight requests are terminated at the middleware boundary **before** reaching any
+>   authentication guards or route handlers, ensuring that cross-origin cookie flows are
+>   never blocked by a missing or expired JWT during the preflight phase.
 
 ### Query Parameters for `GET /api/v1/tasks`
 

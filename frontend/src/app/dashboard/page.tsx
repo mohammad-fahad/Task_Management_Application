@@ -155,7 +155,7 @@ export default function DashboardPage() {
                 <p className="text-sm text-muted-foreground mb-4">
                   {filter.search
                     ? "No tasks match your search. Try different keywords."
-                    : "You haven't created any tasks yet. Get started!"}
+                    : "No tasks found. Click '+ Add Task' to get started!"}
                 </p>
                 <Button onClick={handleCreate}>Create your first task</Button>
               </div>

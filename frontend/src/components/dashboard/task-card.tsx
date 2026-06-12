@@ -72,7 +72,7 @@ export function TaskCard({ task, onEdit }: TaskCardProps) {
           <div className="flex items-start justify-between gap-2">
             <h3
               className={cn(
-                "text-base font-medium leading-snug",
+                "text-base font-medium leading-snug break-words overflow-hidden text-ellipsis",
                 isCompleted && "line-through text-muted-foreground/60"
               )}
             >
@@ -106,11 +106,12 @@ export function TaskCard({ task, onEdit }: TaskCardProps) {
           </div>
 
           {/* Description */}
-          {task.description && (
-            <p className="mt-1 text-sm text-muted-foreground line-clamp-2">
-              {task.description}
-            </p>
-          )}
+          <p className={cn(
+            "mt-1 text-sm line-clamp-2 break-words overflow-hidden text-ellipsis",
+            task.description ? "text-muted-foreground" : "text-muted-foreground/50 italic"
+          )}>
+            {task.description || "No description provided."}
+          </p>
 
           {/* Meta badges */}
           <div className="mt-3 flex flex-wrap items-center gap-2">

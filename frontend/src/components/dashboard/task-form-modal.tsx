@@ -231,12 +231,17 @@ export function TaskFormModal({ open, onOpenChange, task }: TaskFormModalProps) 
               type="button"
               variant="outline"
               onClick={() => onOpenChange(false)}
-              disabled={isSubmitting}
+              disabled={isSubmitting || createTask.isPending || updateTask.isPending}
             >
               Cancel
             </Button>
-            <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            <Button
+              type="submit"
+              disabled={isSubmitting || createTask.isPending || updateTask.isPending}
+            >
+              {(isSubmitting || createTask.isPending || updateTask.isPending) && (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              )}
               {isEditing ? "Save Changes" : "Create Task"}
             </Button>
           </DialogFooter>

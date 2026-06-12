@@ -9,6 +9,12 @@
 <h1 align="center">📋 Enterprise Task Management Application</h1>
 
 <p align="center">
+  <a href="https://github.com/mohammad-fahad/Task_Management_Application"><img src="https://img.shields.io/badge/GitHub-Repository-181717?style=for-the-badge&logo=github" alt="GitHub Repository" /></a>
+  <a href="https://task-management-application-omega-lyart.vercel.app/"><img src="https://img.shields.io/badge/Frontend-Vercel-000000?style=for-the-badge&logo=vercel" alt="Live Frontend (Vercel)" /></a>
+  <a href="https://taskmanager-api-l99f.onrender.com"><img src="https://img.shields.io/badge/Backend-Render-46E3B7?style=for-the-badge&logo=render" alt="Live API (Render)" /></a>
+</p>
+
+<p align="center">
   <strong>Go Clean Architecture (Handler → Service → Repository) + Next.js 14 Standalone</strong>
   <br />
   A production-grade, full-stack task management system built with battle-tested patterns,

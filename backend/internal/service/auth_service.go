@@ -134,7 +134,7 @@ func (s *AuthService) SetAuthCookie(w http.ResponseWriter, token string) {
 		Path:     "/",
 		HttpOnly: true,
 		Secure:   true,
-		SameSite: http.SameSiteStrictMode,
+		SameSite: http.SameSiteNoneMode,
 		MaxAge:   int(24 * time.Hour.Seconds()), // 24 hours
 	})
 }
@@ -147,7 +147,7 @@ func (s *AuthService) ClearAuthCookie(w http.ResponseWriter) {
 		Path:     "/",
 		HttpOnly: true,
 		Secure:   true,
-		SameSite: http.SameSiteStrictMode,
+		SameSite: http.SameSiteNoneMode,
 		MaxAge:   -1,
 	})
 }

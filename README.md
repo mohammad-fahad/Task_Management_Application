@@ -300,7 +300,7 @@ This single command will:
 
 ```bash
 # Health check — API
-curl -s -o /dev/null -w "%{http_code}" http://localhost:8080/api/auth/me
+curl -s -o /dev/null -w "%{http_code}" http://localhost:8080/api/v1/auth/me
 
 # Health check — Frontend
 curl -s -o /dev/null -w "%{http_code}" http://localhost:3000
@@ -320,23 +320,62 @@ docker compose down -v
 
 ---
 
+## Vercel Deployment Adaptation
+
+The frontend is fully adapted for native Vercel deployment via the **Next.js standalone output mode**. Key configuration points:
+
+| Concern | Implementation | File |
+|---|---|---|
+| **Output mode** | `output: 'standalone'` in `next.config.js` — produces a minimal self-contained build | `frontend/next.config.js` |
+| **API routing** | `NEXT_PUBLIC_API_URL` and `NEXT_SERVER_API_URL` control client vs server-side API base URLs | `.env` / Vercel Environment Variables |
+| **Static asset handling** | Public assets served from `/public`, bundled into standalone output | `frontend/public/` |
+| **Image optimization** | Configured via `next.config.js`; uses default Vercel image optimizer when deployed | `frontend/next.config.js` |
+
+### Environment Variables for Vercel
+
+When deploying to Vercel, set the following in the Vercel dashboard (Settings → Environment Variables):
+
+```
+NEXT_PUBLIC_API_URL=https://api.yourdomain.com/api
+NEXT_SERVER_API_URL=https://api.yourdomain.com/api
+```
+
+> **Note:** For local Docker Compose development, `NEXT_SERVER_API_URL=http://api:8080/api` resolves via the internal Docker network. On Vercel, both variables point to the same public API URL because there is no internal Docker network.
+
+### Custom Domain Considerations
+
+1. **CORS Origin**: Set `API_ALLOWED_ORIGINS` in the backend deployment (e.g., Railway, Fly.io, or your own VPS) to match the **exact** Vercel frontend domain (e.g., `https://task-manager.vercel.app` or your custom domain).
+2. **Cookie Domain**: For cross-domain cookies (frontend on Vercel, backend on another host), ensure the backend sets `SameSite=None; Secure` on the JWT cookie and the backend domain is served over HTTPS with a valid TLS certificate.
+
+---
+
 ## API Endpoints
 
 | Method | Endpoint | Description | Auth |
 |---|---|---|---|
-| `POST` | `/api/auth/register` | Create a new user account | ❌ |
-| `POST` | `/api/auth/login` | Authenticate and receive JWT cookie | ❌ |
-| `POST` | `/api/auth/logout` | Invalidate session (clear cookie) | ✅ |
-| `GET` | `/api/auth/me` | Get current authenticated user | ✅ |
-| `GET` | `/api/tasks` | List tasks (paginated, filterable, sortable) | ✅ |
-| `POST` | `/api/tasks` | Create a new task | ✅ |
-| `GET` | `/api/tasks/{id}` | Get a single task by ID | ✅ |
-| `PUT` | `/api/tasks/{id}` | Update a task | ✅ |
-| `DELETE` | `/api/tasks/{id}` | Delete a task | ✅ |
-| `GET` | `/api/tasks/{id}/activity` | Get activity log for a task | ✅ |
-| `GET` | `/api/events` | SSE stream for real-time updates | ✅ |
+| `POST` | `/api/v1/auth/register` | Create a new user account | ❌ |
+| `POST` | `/api/v1/auth/login` | Authenticate and receive JWT cookie | ❌ |
+| `POST` | `/api/v1/auth/logout` | Invalidate session (clear cookie) | ✅ |
+| `GET` | `/api/v1/auth/me` | Get current authenticated user | ✅ |
+| `GET` | `/api/v1/tasks` | List tasks (paginated, filterable, sortable) | ✅ |
+| `POST` | `/api/v1/tasks` | Create a new task | ✅ |
+| `GET` | `/api/v1/tasks/{id}` | Get a single task by ID | ✅ |
+| `PUT` | `/api/v1/tasks/{id}` | Update a task | ✅ |
+| `DELETE` | `/api/v1/tasks/{id}` | Delete a task | ✅ |
+| `GET` | `/api/v1/tasks/{id}/activity` | Get activity log for a task | ✅ |
+| `GET` | `/api/v1/events` | SSE stream for real-time updates | ✅ |
 
-### Query Parameters for `GET /api/tasks`
+> **🔧 CORS Preflight Optimization**
+>
+> The server explicitly handles `OPTIONS` preflight requests at the middleware layer and returns
+> **HTTP 200 OK** immediately — without entering the route execution pipeline. This behaviour
+> eliminates unnecessary latency for cross-origin requests (the preflight round-trip completes
+> in a single network hop) and ensures full compatibility with credentialled requests (cookies)
+> by returning the exact `Access-Control-Allow-Origin` and `Access-Control-Allow-Credentials: true`
+> headers. The preflight cache is set to `3600` seconds (`Access-Control-Max-Age: 3600`), so
+> browsers only send one `OPTIONS` request per origin per hour.
+
+### Query Parameters for `GET /api/v1/tasks`
 
 | Parameter | Type | Description | Default |
 |---|---|---|---|
@@ -413,5 +452,5 @@ This project is licensed under the **MIT License**. See the [LICENSE](LICENSE) f
 <p align="center">
   Built with ❤️ by the Task Management Team
   <br />
-  <sub>Go Clean Architecture · Next.js 14 Standalone · PostgreSQL 16</sub>
+<sub>Go Clean Architecture · Next.js 14 Standalone · PostgreSQL 16 · Vercel Deploy Ready</sub>
 </p>

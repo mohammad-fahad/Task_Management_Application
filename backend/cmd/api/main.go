@@ -79,10 +79,11 @@ func main() {
 	// =========================================================================
 	r := chi.NewRouter()
 
-	// Global middleware
+	// Global middleware — CORS MUST be the very first middleware so OPTIONS
+	// preflight requests are terminated before any auth/recovery/logging runs.
+	r.Use(middleware.CORSMiddleware)
 	r.Use(recoveryMiddleware.Recovery)
 	r.Use(middleware.RequestLoggingMiddleware)
-	r.Use(middleware.CORSMiddleware)
 	r.Use(chiMiddleware.RequestID)
 	r.Use(chiMiddleware.RealIP)
 	r.Use(chiMiddleware.Timeout(30 * time.Second))

@@ -35,16 +35,19 @@ func CORSMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		origin := r.Header.Get("Origin")
 
-		// Determine if the request's origin is permitted
+		// Failsafe dynamic origin binding: if the request origin is in our
+		// allow-list, echo it back exactly. Otherwise, fall back to the
+		// production domain so the header is NEVER missing.
 		allowedOrigin := resolveAllowedOrigin(origin, allowedOrigins)
-
-		if allowedOrigin != "" {
-			w.Header().Set("Access-Control-Allow-Origin", allowedOrigin)
+		if allowedOrigin == "" {
+			allowedOrigin = "https://task-management-application-omega-lyart.vercel.app"
 		}
 
-		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, DELETE, OPTIONS")
-		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization, Cookie")
+		w.Header().Set("Access-Control-Allow-Origin", allowedOrigin)
 		w.Header().Set("Access-Control-Allow-Credentials", "true")
+		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, DELETE, OPTIONS")
+		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Requested-With, Accept, Origin")
+		w.Header().Set("Access-Control-Expose-Headers", "Content-Type, Authorization")
 		w.Header().Set("Access-Control-Max-Age", "3600")
 
 		// Terminate preflight requests immediately — do NOT pass to auth middleware

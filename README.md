@@ -337,14 +337,6 @@ The frontend is fully adapted for native Vercel deployment via the **Next.js sta
 | **Static asset handling** | Public assets served from `/public`, bundled into standalone output | `frontend/public/` |
 | **Image optimization** | Configured via `next.config.js`; uses default Vercel image optimizer when deployed | `frontend/next.config.js` |
 
-### Environment Variables for Vercel
-
-When deploying to Vercel, set the following in the Vercel dashboard (Settings → Environment Variables):
-
-```
-NEXT_PUBLIC_API_URL=https://api.yourdomain.com/api
-NEXT_SERVER_API_URL=https://api.yourdomain.com/api
-```
 
 > **Note:** For local Docker Compose development, `NEXT_SERVER_API_URL=http://api:8080/api` resolves via the internal Docker network. On Vercel, both variables point to the same public API URL because there is no internal Docker network.
 
@@ -493,7 +485,7 @@ This project is licensed under the **MIT License**. See the [LICENSE](LICENSE) f
 ---
 
 <p align="center">
-  Built with ❤️ by the Task Management Team
+  Built with ❤️ by Mohammad Fahad
   <br />
 <sub>Go Clean Architecture · Next.js 14 Standalone · PostgreSQL 16 · Vercel Deploy Ready</sub>
 </p>
